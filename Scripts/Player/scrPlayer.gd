@@ -528,15 +528,23 @@ func handle_horizontal_movement():
 # Orient sprite direction, masks and bullets
 func orient_player() -> void:
 	
-	var direction_input: float = Input.get_axis("button_left", "button_right")
+	#var direction_input: float = Input.get_axis("button_left", "button_right")
+	var direction_input: int = sign(Input.get_axis("button_left", "button_right"))
 	
-	if direction_input != 0:
-		animated_sprite.set_flip_h(direction_input < 0)
-		looking_at = roundi(direction_input)
-		$playerMask.position.x = 1.5 * sign(looking_at)
+	if direction_input != 0 && direction_input != looking_at:
+		looking_at = direction_input
+		# player has just flipped the character this turn, we'll need to move the masks and stuff accordingly
+		animated_sprite.set_flip_h(looking_at < 0)
+		$playerMask.position.x = 1.5 * looking_at
 		$extraCollisions.scale.x = looking_at
-
-
+		# because the mask has physically moved, we need to adjust the player position such that the mask remains in the same global position
+		#   otherwise the mask might get inside something it shouldn't have been able to enter
+		# when we flip from right to left, the mask moves 3 pixels left, so we move the player right 3 pixels to counter this
+		if looking_at < 0:
+			position.x += 3
+		elif looking_at > 0:
+			position.x -= 3
+		
 # Handles gravity / falling
 func add_gravity(delta) -> void:
 	
